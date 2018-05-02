@@ -50,3 +50,5 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+ftdi_cpu_prog
+*.swp
