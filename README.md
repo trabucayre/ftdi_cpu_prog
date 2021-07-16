@@ -1,6 +1,12 @@
 # ftdi_cpu_prog
 tool to automate the programming of microcontrollers
 
+In order for this tool to work, the CBUS pins must be configured as
+GPIO. This configuration can be achieved by using the tool at
+[ft232_cbus_config](https://github.com/trabucayre/ft232_cbus_config)
+which configures all *CBUS* pins as GPIOs. This configuration, updates internal EEPROM
+and needs only be performed once on a given FTDI chip.
+
 ## udev
 By default, users have no access to converters. A rule file
 (*99-ftdi_cpu_progr.rules*) for *udev* is provided at the root directory
@@ -18,11 +24,11 @@ After that you need to unplug and replug your device.
 
 ```bash
 ./ftdi_cpu_prog -b [0-3] [-bd [0-1]] -r [0-3] [-rd [0-1]] -m [0-1] -d device
-        -b pin connected to CBUS
+        -b pin connected to BOOT
         -bd default state for BOOT
         -r pin connected to reset
         -rd default state for reset
         -m mode 0: bootloader, 1: simple reset
 ```
 
-For `-b` and `-r` index is CBUSx
+For `-b` and `-r` args, value must match indexes for CBUSx connected to `BOOT` and `RESET`
