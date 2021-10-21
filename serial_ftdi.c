@@ -32,8 +32,13 @@ struct serial {
 };
 
 void serial_flush(const serial_t *h) {
+#if LIBFTDI_OLD == 1
 	ftdi_usb_purge_tx_buffer(h->ftdi); 
 	ftdi_usb_purge_rx_buffer(h->ftdi); 
+#else
+	ftdi_tciflush(h->ftdi);
+	ftdi_tcoflush(h->ftdi);
+#endif
 }
 
 unsigned int udevstufftoint(const char *udevstring, int base)
@@ -207,16 +212,20 @@ serial_t* serial_open(const char *device, int reset, int def_reset,
 	return h;
 }
 
+#if LIBFTDI_OLD == 1
 /* cf. ftdi.c same function */
 static void ftdi_usb_close_internal (struct ftdi_context *ftdi)
 {
 	libusb_close (ftdi->usb_dev);
 	ftdi->usb_dev = NULL;
 }
+#endif
 
 void serial_close(serial_t *h) {
 	assert(h && h->ftdi !=NULL);
 	struct ftdi_context *ftdi = h->ftdi;
+
+#if LIBFTDI_OLD == 1
 	int rtn;
 
 	//serial_set_cbus(h, CBUS_DIR);
@@ -239,6 +248,10 @@ void serial_close(serial_t *h) {
 		}
 	}
 	ftdi_usb_close_internal(ftdi);
+#else
+	serial_flush(h);
+	ftdi_usb_close(ftdi);
+#endif
 
 	ftdi_free(ftdi);
 	free(h);
