@@ -15,6 +15,6 @@ fi
 echo $DEV $@
 
 ftdi_cpu_prog -r 2 -b 1 -d $DEV -m 0
-./stm32flash/stm32flash $@
+stm32flash $@
 ftdi_cpu_prog -r 2 -b 1 -d $DEV -m 1
 
