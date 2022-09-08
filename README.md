@@ -7,6 +7,20 @@ GPIO. This configuration can be achieved by using the tool at
 which configures all *CBUS* pins as GPIOs. This configuration, updates internal EEPROM
 and needs only be performed once on a given FTDI chip.
 
+## compile
+
+This application uses **libftdi1** and **libudev-dev**, so these libraries must be installed (and,
+depending of the distribution, headers too)
+```bash
+apt-get install libftdi1-2 libftdi1-dev libudev-dev
+```
+and if not already done, install **pkg-config**, **make** and **gcc**.
+
+To build the app:
+```bash
+$ make
+```
+
 ## udev
 By default, users have no access to converters. A rule file
 (*99-ftdi_cpu_progr.rules*) for *udev* is provided at the root directory
