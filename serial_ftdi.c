@@ -67,8 +67,8 @@ unsigned int udevstufftoint(const char *udevstring, int base)
 #ifdef USE_DEVNUM
 void find_ftdi_and_open(serial_t *h, int devnum)
 {
-    //int ret;
-    struct ftdi_device_list *devlist, *curdev;
+	//int ret;
+	struct ftdi_device_list *devlist, *curdev;
 	
 	/*ret = */ftdi_usb_find_all(h->ftdi, &devlist, h->vid, h->pid);
 	/* test needed */
@@ -121,9 +121,9 @@ serial_t* serial_open(const char *device, int reset, int def_reset,
 	}
 #ifdef DEBUG
 	printf("Using %s (UID=%ld GID=%ld perm=%lo)  %d:%d\n",
-	       device, (long)statinfo.st_uid, (long)statinfo.st_gid,
-	       (unsigned long)statinfo.st_mode,
-	       major(statinfo.st_rdev), minor(statinfo.st_rdev));
+		   device, (long)statinfo.st_uid, (long)statinfo.st_gid,
+		   (unsigned long)statinfo.st_mode,
+		   major(statinfo.st_rdev), minor(statinfo.st_rdev));
 #endif
 
 	/* Create the udev object */
@@ -143,25 +143,25 @@ serial_t* serial_open(const char *device, int reset, int def_reset,
 
 	/* Get closest usb device parent (we need VIP/PID)  */
 	usbdeviceparent =
-	    udev_device_get_parent_with_subsystem_devtype(dev, "usb",
+		udev_device_get_parent_with_subsystem_devtype(dev, "usb",
 							  "usb_device");
 	if (!usbdeviceparent) {
 		printf
-		    ("Unable to find parent usb device! Is this actually an USB device ?\n");
+			("Unable to find parent usb device! Is this actually an USB device ?\n");
 		udev_device_unref(dev);
 		udev_unref(udev);
 		return NULL;
 	}
 
 	h->vid =
-	    udevstufftoint(udev_device_get_sysattr_value
+		udevstufftoint(udev_device_get_sysattr_value
 			   (usbdeviceparent, "idVendor"), 16);
 	h->pid =
-	    udevstufftoint(udev_device_get_sysattr_value
+		udevstufftoint(udev_device_get_sysattr_value
 			   (usbdeviceparent, "idProduct"), 16);
 #ifdef USE_DEVNUM
 	int devnum =
-	    udevstufftoint(udev_device_get_sysattr_value
+		udevstufftoint(udev_device_get_sysattr_value
 			   (usbdeviceparent, "devnum"), 10);
 #else
 	sprintf(h->serial, "%s", udev_device_get_sysattr_value(usbdeviceparent, "serial"));
@@ -182,6 +182,7 @@ serial_t* serial_open(const char *device, int reset, int def_reset,
 		fprintf(stderr, "ftdi_new failed\n");
 		return NULL;
 	}
+	h->ftdi->module_detach_mode = AUTO_DETACH_REATACH_SIO_MODULE;
 	ftdi_set_interface(h->ftdi, h->interface);
 #ifdef USE_DEVNUM
 	find_ftdi_and_open(h, devnum);
@@ -197,8 +198,8 @@ serial_t* serial_open(const char *device, int reset, int def_reset,
 	h->ftdi->usb_write_timeout = 10000;
 	h->ftdi->usb_read_timeout = 10000;
 #ifdef DEBUG
-    if (h->ftdi->type == TYPE_R)
-    {
+	if (h->ftdi->type == TYPE_R)
+	{
 		unsigned int chipid;
 		printf("ftdi_read_chipid: %d\n", ftdi_read_chipid(h->ftdi, &chipid));
 		printf("FTDI chipid: %X\n", chipid);
@@ -249,8 +250,20 @@ void serial_close(serial_t *h) {
 	}
 	ftdi_usb_close_internal(ftdi);
 #else
-	serial_flush(h);
-	ftdi_usb_close(ftdi);
+	int ret;
+	if ((ret = ftdi_tciflush(ftdi)) < 0) {
+		printf("unable to purge read buffers\n");
+		return;
+	}
+	if ((ret = ftdi_tcoflush(ftdi)) < 0) {
+		printf("unable to purge write buffers\n");
+		return;
+	}
+	if ((ret = ftdi_usb_close(ftdi)) < 0) {
+		printf("unable to close device\n");
+		return;
+	}
+
 #endif
 
 	ftdi_free(ftdi);
@@ -279,28 +292,28 @@ void ftdi_send_reset(const serial_t *serial, int cbus)
 void ftdi_bootloader(const serial_t *serial, int cbus)
 {
 #if 0
-    /* erase high, reset high*/
+	/* erase high, reset high*/
 	cbus = CBUS_DIR|serial->dload|serial->reset;
 	serial_set_cbus(serial, cbus);
-    usleep(45000);
-    usleep(18000);
-    /* reset sequence */
-    cbus = CBUS_DIR|serial->dload;
+	usleep(45000);
+	usleep(18000);
+	/* reset sequence */
+	cbus = CBUS_DIR|serial->dload;
 	serial_set_cbus(serial, cbus);
-    usleep(70000);
-    usleep(24000);
-    //usleep(30000);
+	usleep(70000);
+	usleep(24000);
+	//usleep(30000);
 	cbus = CBUS_DIR|serial->dload|serial->reset;
 	serial_set_cbus(serial, cbus);
 	//ftdi_send_reset(serial, cbus);
 	
-    usleep(45000);
-    usleep(18000);
-    /* erase low */
+	usleep(45000);
+	usleep(18000);
+	/* erase low */
 	cbus = CBUS_DIR|serial->reset;
 	serial_set_cbus(serial, cbus);
-    usleep(45000);
-    usleep(18000);
+	usleep(45000);
+	usleep(18000);
 
 #else
 
@@ -311,13 +324,13 @@ void ftdi_bootloader(const serial_t *serial, int cbus)
 		cbus |= serial->dload;
 	serial_set_cbus(serial, cbus);
 	//usleep(70000);
-    usleep(45000);
-    usleep(18000);
+	usleep(45000);
+	usleep(18000);
 	// 2 : reset 0
 	ftdi_send_reset(serial, cbus);
 	//usleep(600000);
-    usleep(45000);
-    usleep(18000);
+	usleep(45000);
+	usleep(18000);
 	// 3 : BOOT0 0
 	if (serial->def_dload == 1)
 		cbus |= serial->dload;
